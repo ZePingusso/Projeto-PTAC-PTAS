@@ -1,16 +1,25 @@
 [
-    {
-        "id": 1,
-        "name": "John Doe",
-        "email": "johndoe@email.com",
-        "cpf": "123.456.789-00",
-        "category": "student"
-    },
-    {
-        "id": 2,
-        "name": "Jane Smith",
-        "email": "janesmith@email.com",
-        "cpf": "987.654.321-00",
-        "category": "teacher"
-    }
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "johndoe@email.com",
+    "cpf": "123.456.789-00",
+    "category": "student"
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "janesmith@email.com",
+    "cpf": "987.654.321-00",
+    "category": "teacher",
+    "discipline": "Biology"
+  },
+  {
+    "id": 3,
+    "name": "Maria Oliveira",
+    "email": "maria@email.com",
+    "cpf": "222.333.444-55",
+    "category": "teacher",
+    "discipline": "Mathematics"
+  }
 ]
