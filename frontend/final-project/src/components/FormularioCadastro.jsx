@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancelarEdicao }) {
   const [nome, setNome] = useState(usuarioEditando ? usuarioEditando.nome : '');
@@ -6,7 +6,20 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
   const [senha, setSenha] = useState(usuarioEditando ? usuarioEditando.senha : '');
   const [cpf, setCpf] = useState(usuarioEditando ? usuarioEditando.cpf : '');
   const [cargo, setCargo] = useState(usuarioEditando ? usuarioEditando.cargo : 'Aluno');
-  const [erroForm, setErroForm] = useState('');
+
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState(null);
+  const [mensagemSucesso, setMensagemSucesso] = useState(null);
+
+  const controleRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (controleRef.current) {
+        controleRef.current.abort();
+      }
+    };
+  }, []);
 
   function limparCampos() {
     setNome('');
@@ -14,36 +27,50 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
     setSenha('');
     setCpf('');
     setCargo('Aluno');
-    setErroForm('');
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    setErroForm('');
+  async function enviar(e) {
+    e.preventDefault(); 
+    setErro(null);
+    setMensagemSucesso(null);
 
+   
     if (!nome.trim() || !email.trim() || !senha.trim() || !cpf.trim() || !cargo) {
-      setErroForm('Por favor, preencha todos os campos obrigatórios (Nome, E-mail, Senha, CPF e Cargo).');
+      setErro('Preencha todos os campos obrigatórios (Nome, E-mail, Senha, CPF e Cargo).');
       return;
     }
 
-    onSalvar({
-      nome,
-      email,
-      senha,
-      cpf,
-      cargo,
-    });
+    controleRef.current = new AbortController();
 
-    limparCampos();
+    try {
+      setEnviando(true);
+
+      const salvo = await onSalvar(
+        { nome, email, senha, cpf, cargo },
+        controleRef.current.signal
+      );
+
+      setMensagemSucesso(
+        usuarioEditando
+          ? `Cadastro de ${salvo.nome} atualizado com sucesso!`
+          : `Cadastrado com sucesso! ID: ${salvo.id} — Nome: ${salvo.nome}`
+      );
+
+      limparCampos();
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        setErro(err.message);
+      }
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
     <section className="card">
       <h2>{usuarioEditando ? 'Atualizar Cadastro (RF03)' : 'Cadastrar Aluno ou Professor (RF01)'}</h2>
 
-      {erroForm && <p className="erro-msg">{erroForm}</p>}
-
-      <form onSubmit={handleSubmit} className="formulario">
+      <form onSubmit={enviar} className="formulario">
         <div className="campo">
           <label>Nome completo *</label>
           <input
@@ -95,16 +122,24 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
         </div>
 
         <div className="botoes-form">
-          <button type="submit" className="btn-primario">
-            {usuarioEditando ? 'Salvar Alterações' : 'Cadastrar'}
+          <button type="submit" className="btn-primario" disabled={enviando}>
+            {enviando ? 'Enviando...' : usuarioEditando ? 'Salvar Alterações' : 'Cadastrar'}
           </button>
 
           {usuarioEditando && (
-            <button type="button" className="btn-secundario" onClick={onCancelarEdicao}>
+            <button type="button" className="btn-secundario" onClick={onCancelarEdicao} disabled={enviando}>
               Cancelar
             </button>
           )}
         </div>
+
+        {enviando && <p className="status-msg">Enviando dados...</p>}
+        {erro && <p className="erro-msg">Erro: {erro}</p>}
+        {mensagemSucesso && (
+          <p style={{ color: '#15803d', backgroundColor: '#dcfce7', padding: '10px', borderRadius: '5px', fontSize: '14px' }}>
+            {mensagemSucesso}
+          </p>
+        )}
       </form>
     </section>
   );

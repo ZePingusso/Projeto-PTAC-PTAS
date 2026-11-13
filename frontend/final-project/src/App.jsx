@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import FormularioCadastro from './components/FormularioCadastro';
 import TabelaUsuarios from './components/TabelaUsuarios';
+import { getUsuarios, postUsuario, putUsuario, deleteUsuario } from './services/api';
 import './App.css';
 
 export default function App() {
@@ -8,38 +9,19 @@ export default function App() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
-
   const [tentativa, setTentativa] = useState(0);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
 
-  
+
   useEffect(() => {
     const controle = new AbortController();
-    const signal = controle.signal;
 
-    async function buscarUsuarios() {
+    async function carregar() {
       try {
         setCarregando(true);
         setErro(null);
-
-        const resp = await fetch('/usuarios.json', { signal });
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
-        }
-
-        const data = await resp.json();
-
-    
-        const dadosIniciais = data.slice(0, 4).map((u, index) => ({
-          id: u.id,
-          nome: u.name,
-          email: u.email,
-          senha: '******',
-          cpf: `111.222.33${index}-44`,
-          cargo: index % 2 === 0 ? 'Aluno' : 'Professor',
-        }));
-
-        setUsuarios(dadosIniciais);
+        const dados = await getUsuarios(controle.signal);
+        setUsuarios(dados);
       } catch (e) {
         if (e.name !== 'AbortError') {
           setErro(e.message);
@@ -49,40 +31,39 @@ export default function App() {
       }
     }
 
-    buscarUsuarios();
-
+    carregar();
     return () => controle.abort();
   }, [tentativa]);
 
 
-  function salvarUsuario(dadosFormulario) {
+  async function salvarUsuario(dadosFormulario) {
     if (usuarioEditando) {
-      const listaAtualizada = usuarios.map((u) =>
-        u.id === usuarioEditando.id ? { ...dadosFormulario, id: usuarioEditando.id } : u
-      );
-      setUsuarios(listaAtualizada);
+      const atualizado = await putUsuario(usuarioEditando.id, dadosFormulario);
+      setUsuarios(usuarios.map((u) => (u.id === atualizado.id ? atualizado : u)));
       setUsuarioEditando(null);
+      return atualizado;
     } else {
-      const novoUsuario = {
-        ...dadosFormulario,
-        id: Date.now(),
-      };
-      setUsuarios([...usuarios, novoUsuario]);
+      const criado = await postUsuario(dadosFormulario);
+      setUsuarios([...usuarios, criado]);
+      return criado;
     }
   }
 
+  async function excluirUsuario(id) {
+    if (!window.confirm('Tem certeza que deseja excluir este cadastro?')) return;
 
-  function excluirUsuario(id) {
-    const confirmar = window.confirm('Tem certeza que deseja excluir este cadastro?');
-    if (confirmar) {
+    try {
+      await deleteUsuario(id);
       setUsuarios(usuarios.filter((u) => u.id !== id));
+    } catch (e) {
+      alert('Erro ao excluir: ' + e.message);
     }
   }
 
   if (carregando) {
     return (
       <div className="container">
-        <p className="status-msg">Carregando dados...</p>
+        <p className="status-msg">Carregando sistema escolar...</p>
       </div>
     );
   }
