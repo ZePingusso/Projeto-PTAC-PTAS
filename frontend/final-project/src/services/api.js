@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const URL_BASE = 'http://localhost:3000/peoples'
 
 export async function getUsuarios(signal) {
