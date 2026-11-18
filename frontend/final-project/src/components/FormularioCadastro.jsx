@@ -143,4 +143,8 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
       </form>
     </section>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
