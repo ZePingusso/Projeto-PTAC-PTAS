@@ -1,108 +1,103 @@
-import { useState, useEffect } from 'react'
-import { FormularioCadastro } from './components/FormularioCadastro'
-import { ListaUsuarios } from './components/ListaUsuarios'
+import { useEffect, useState } from 'react';
+import FormularioCadastro from './components/FormularioCadastro';
+import TabelaUsuarios from './components/TabelaUsuarios';
+import { getUsuarios, postUsuario, putUsuario, deleteUsuario } from './services/api';
+import './App.css';
 
+export default function App() {
+  const [usuarios, setUsuarios] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
-const API_URL = 'http://localhost:3000/users'
+  const [tentativa, setTentativa] = useState(0);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
 
-function App() {
-  const [usuarios, setUsuarios] = useState([])
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null)
 
   useEffect(() => {
-    async function carregarDadosIniciais() {
+    const controle = new AbortController();
+
+    async function carregar() {
       try {
-        const response = await fetch(API_URL)
-        const data = await response.json()
-        setUsuarios(Array.isArray(data) ? data : [])
-      } catch (error) {
-        console.error('Falha de comunicação de rede:', error)
+        setCarregando(true);
+        setErro(null);
+        const dados = await getUsuarios(controle.signal);
+        setUsuarios(dados);
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          setErro(e.message);
+        }
+      } finally {
+        setCarregando(false);
       }
     }
-    carregarDadosIniciais()
-  }, []) 
-  async function sincronizarTabela() {
-    const response = await fetch(API_URL)
-    const data = await response.json()
-    setUsuarios(Array.isArray(data) ? data : [])
-  }
 
-  async function handleSalvar(dadosDoFormulario) {
-    // Validação defensiva (RF02)
-    if (!dadosDoFormulario.nome.trim() || !dadosDoFormulario.email.trim()) {
-      alert('Nome e E-mail são campos obrigatórios!')
-      return
-    }
+    carregar();
+    return () => controle.abort();
+  }, [tentativa]);
 
-    try {
-      const url = usuarioSelecionado ? `${API_URL}/${usuarioSelecionado.id}` : API_URL
-      const method = usuarioSelecionado ? 'PATCH' : 'POST'
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dadosDoFormulario)
-      })
-
-      if (!response.ok) {
-        const erroServidor = await response.json()
-        throw new Error(erroServidor.erro || 'Erro ao processar dados no servidor.')
-      }
-
-      setUsuarioSelecionado(null)
-      await sincronizarTabela()
-    } catch (error) {
-      alert(error.message)
+  async function salvarUsuario(dadosFormulario) {
+    if (usuarioEditando) {
+      const atualizado = await putUsuario(usuarioEditando.id, dadosFormulario);
+      setUsuarios(usuarios.map((u) => (u.id === atualizado.id ? atualizado : u)));
+      setUsuarioEditando(null);
+      return atualizado;
+    } else {
+      const criado = await postUsuario(dadosFormulario);
+      setUsuarios([...usuarios, criado]);
+      return criado;
     }
   }
 
-  async function handleExcluir(id) {
-    if (!confirm(`Deseja confirmar a remoção lógica do cadastro #${id}?`)) return
+  async function excluirUsuario(id) {
+    if (!window.confirm('Tem certeza que deseja excluir este cadastro?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-      if (response.ok || response.status === 204) {
-        await sincronizarTabela()
-      }
-    } catch (error) {
-      alert('Não foi possível efetuar a exclusão.')
+      await deleteUsuario(id);
+      setUsuarios(usuarios.filter((u) => u.id !== id));
+    } catch (e) {
+      alert('Erro ao excluir: ' + e.message);
     }
+  }
+
+  if (carregando) {
+    return (
+      <div className="container">
+        <p className="status-msg">Carregando sistema escolar...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="container">
+        <p className="erro-msg">Erro: {erro}</p>
+        <button className="btn-primario" onClick={() => setTentativa((t) => t + 1)}>
+          Tentar novamente
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className="container">
-      <h1> Controle Acadêmico Full-Stack</h1>
-      
-      <FormularioCadastro 
-        usuarioEmEdicao={usuarioSelecionado} 
-        onSalvar={handleSalvar} 
-        onCancelar={() => setUsuarioSelecionado(null)} 
+      <header className="cabecalho">
+        <h1>Sistema Escolar</h1>
+        <p>Dupla: Lucas Bispo da Cruz e Enrique Meira Charão</p>
+      </header>
+
+      <FormularioCadastro
+        key={usuarioEditando ? usuarioEditando.id : 'novo'}
+        onSalvar={salvarUsuario}
+        usuarioEditando={usuarioEditando}
+        onCancelarEdicao={() => setUsuarioEditando(null)}
       />
 
-      <div className="card">
-        <h2>🔍 Alunos e Professores Cadastrados (RF06)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>CPF</th>
-              <th>Cargo</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ListaUsuarios 
-              usuarios={usuarios} 
-              aoEditar={setUsuarioSelecionado} 
-              aoExcluir={handleExcluir} 
-            />
-          </tbody>
-        </table>
-      </div>
+      <TabelaUsuarios
+        usuarios={usuarios}
+        onEditar={(usuario) => setUsuarioEditando(usuario)}
+        onExcluir={excluirUsuario}
+      />
     </div>
-  )
+  );
 }
-
-export default App
