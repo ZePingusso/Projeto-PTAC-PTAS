@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancelarEdicao }) {
+  const [disciplina, setDisciplina] = useState(usuarioEditando ? usuarioEditando.disciplina || '' : '');
   const [nome, setNome] = useState(usuarioEditando ? usuarioEditando.nome : '');
   const [email, setEmail] = useState(usuarioEditando ? usuarioEditando.email : '');
   const [senha, setSenha] = useState(usuarioEditando ? usuarioEditando.senha : '');
@@ -27,16 +28,24 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
     setSenha('');
     setCpf('');
     setCargo('Aluno');
+    setDisciplina('');
   }
 
   async function enviar(e) {
-    e.preventDefault(); 
+    e.preventDefault();
     setErro(null);
     setMensagemSucesso(null);
 
-   
-    if (!nome.trim() || !email.trim() || !senha.trim() || !cpf.trim() || !cargo) {
-      setErro('Preencha todos os campos obrigatórios (Nome, E-mail, Senha, CPF e Cargo).');
+
+    if (
+      !nome.trim() ||
+      !email.trim() ||
+      (!usuarioEditando && !senha.trim()) ||
+      !cpf.trim() ||
+      !cargo ||
+      (cargo === 'Professor' && !disciplina.trim())
+    ) {
+      setErro('Preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -46,7 +55,7 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
       setEnviando(true);
 
       const salvo = await onSalvar(
-        { nome, email, senha, cpf, cargo },
+        { nome, email, senha, cpf, cargo, disciplina },
         controleRef.current.signal
       );
 
@@ -108,7 +117,16 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
               type="text"
               placeholder="000.000.000-00"
               value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
+              maxLength={14}
+              onChange={(e) => {
+                let valor = e.target.value.replace(/\D/g, '');
+
+                valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+                setCpf(valor);
+              }}
             />
           </div>
 
@@ -120,6 +138,18 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
             </select>
           </div>
         </div>
+
+        {cargo === 'Professor' && (
+          <div className="campo">
+            <label>Disciplina *</label>
+            <input
+              type="text"
+              placeholder="Digite a disciplina"
+              value={disciplina}
+              onChange={(e) => setDisciplina(e.target.value)}
+            />
+          </div>
+        )}
 
         <div className="botoes-form">
           <button type="submit" className="btn-primario" disabled={enviando}>
@@ -143,8 +173,4 @@ export default function FormularioCadastro({ onSalvar, usuarioEditando, onCancel
       </form>
     </section>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64

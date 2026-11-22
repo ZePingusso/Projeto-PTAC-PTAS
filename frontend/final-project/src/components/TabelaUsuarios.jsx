@@ -14,6 +14,7 @@ export default function TabelaUsuarios({ usuarios, onEditar, onExcluir }) {
 
   return (
     <section className="card">
+
       <h2>Consulta de Alunos e Professores (RF06)</h2>
 
       <div className="filtros">
@@ -30,7 +31,7 @@ export default function TabelaUsuarios({ usuarios, onEditar, onExcluir }) {
         </select>
       </div>
 
-      
+
       {listaFiltrada.length === 0 ? (
         <p className="status-msg">Nenhum aluno ou professor encontrado.</p>
       ) : (
@@ -41,6 +42,7 @@ export default function TabelaUsuarios({ usuarios, onEditar, onExcluir }) {
               <th>E-mail</th>
               <th>CPF</th>
               <th>Cargo</th>
+              <th>Disciplina</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -54,6 +56,11 @@ export default function TabelaUsuarios({ usuarios, onEditar, onExcluir }) {
                   <span className={`badge ${usuario.cargo.toLowerCase()}`}>
                     {usuario.cargo}
                   </span>
+                </td>
+                <td>
+                  {usuario.cargo === 'Professor'
+                    ? usuario.disciplina
+                    : '...'}
                 </td>
                 <td className="acoes">
                   <button className="btn-editar" onClick={() => onEditar(usuario)}>
@@ -70,8 +77,4 @@ export default function TabelaUsuarios({ usuarios, onEditar, onExcluir }) {
       )}
     </section>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
