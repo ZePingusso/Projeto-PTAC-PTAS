@@ -4,7 +4,8 @@
     "name": "John Doe",
     "email": "johndoe@email.com",
     "cpf": "123.456.789-00",
-    "category": "student"
+    "category": "teacher",
+    "discipline": "Filosofia"
   },
   {
     "id": 2,
@@ -21,5 +22,20 @@
     "cpf": "222.333.444-55",
     "category": "teacher",
     "discipline": "Mathematics"
+  },
+  {
+    "id": 4,
+    "name": "luacs",
+    "email": "exom@i.com",
+    "cpf": "112.233.441-22",
+    "category": "student"
+  },
+  {
+    "id": 5,
+    "name": "Lucas",
+    "email": "exemplos@1.com",
+    "cpf": "099.123.323-13",
+    "category": "teacher",
+    "discipline": "Matemática"
   }
 ]

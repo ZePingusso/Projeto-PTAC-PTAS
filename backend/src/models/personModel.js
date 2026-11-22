@@ -1,71 +1,73 @@
-import { readData, writeData } from '../db.js'
+
+import { obterDb } from '../data/db.js'
+
+const COLLECTION = 'peoples'
+
+function colecao() {
+    return obterDb().collection(COLLECTION)
+}
 
 export async function findAll() {
-    return await readData()
+    return await colecao().find().toArray()
 }
 
 export async function findById(id) {
-    const pessoas = await readData()
-
-    return pessoas.find(p => p.id === Number(id)) || null
+    return await colecao().findOne({ id: Number(id) })
 }
 
 export async function create(dados) {
-    const pessoas = await readData()
+    const ultimo = await colecao().findOne(
+        {},
+        { sort: { id: -1 } }
+    )
 
-    const id = pessoas.length
-        ? Math.max(...pessoas.map(p => p.id)) + 1
-        : 1
+    const id = ultimo ? ultimo.id + 1 : 1
 
-    const novaPessoa = { id, ...dados }
+    const novaPessoa = {
+        id,
+        ...dados
+    }
 
-    pessoas.push(novaPessoa)
-
-    await writeData(pessoas)
+    await colecao().insertOne(novaPessoa)
 
     return novaPessoa
 }
 
 export async function update(id, dados) {
-    const pessoas = await readData()
+    const pessoaAtualizada = {
+        id: Number(id),
+        ...dados
+    }
 
-    const indice = pessoas.findIndex(p => p.id === Number(id))
+    const resultado = await colecao().replaceOne(
+        { id: Number(id) },
+        pessoaAtualizada
+    )
 
-    if (indice === -1) return null
+    if (resultado.matchedCount === 0) {
+        return null
+    }
 
-    pessoas[indice] = { id: Number(id), ...dados }
-
-    await writeData(pessoas)
-
-    return pessoas[indice]
+    return await findById(id)
 }
 
 export async function patch(id, dados) {
-    const pessoas = await readData()
+    const resultado = await colecao().updateOne(
+        { id: Number(id) },
+        { $set: dados }
+    )
 
-    const indice = pessoas.findIndex(p => p.id === Number(id))
-
-    if (indice === -1) return null
-
-    pessoas[indice] = {
-        ...pessoas[indice],
-        ...dados,
-        id: Number(id)
+    if (resultado.matchedCount === 0) {
+        return null
     }
 
-    await writeData(pessoas)
-
-    return pessoas[indice]
+    return await findById(id)
 }
 
 export async function remove(id) {
-    const pessoas = await readData()
+    const resultado = await colecao().deleteOne({
+        id: Number(id)
+    })
 
-    const novasPessoas = pessoas.filter(p => p.id !== Number(id))
-
-    if (pessoas.length === novasPessoas.length) return false
-
-    await writeData(novasPessoas)
-
-    return true
+    return resultado.deletedCount > 0
 }
