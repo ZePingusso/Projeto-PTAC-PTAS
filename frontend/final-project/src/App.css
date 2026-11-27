@@ -1,10 +1,9 @@
-<<<<<<< HEAD
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
   color: #333;
   margin: 0;
-=======
+}
 * {
   box-sizing: border-box;
   margin: 0;
@@ -15,7 +14,6 @@ body {
 body {
   background-color: #f4f6f9;
   color: #333;
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
   padding: 20px;
 }
 
@@ -26,7 +24,6 @@ body {
 
 .cabecalho {
   text-align: center;
-<<<<<<< HEAD
   margin-bottom: 20px;
 }
 
@@ -97,7 +94,6 @@ button {
 
 .btn-secundario {
   background-color: gray;
-=======
   margin-bottom: 24px;
 }
 
@@ -184,18 +180,14 @@ button {
 .btn-secundario {
   background-color: #6b7280;
   color: white;
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
 }
 
 .filtros {
   display: flex;
-<<<<<<< HEAD
   gap: 10px;
   margin-bottom: 15px;
-=======
   gap: 12px;
   margin-bottom: 16px;
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
 }
 
 .filtros input {
@@ -205,71 +197,6 @@ button {
 .tabela {
   width: 100%;
   border-collapse: collapse;
-<<<<<<< HEAD
-=======
-}
-
-.tabela th, .tabela td {
-  text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
-}
-
-.tabela th {
-  background-color: #f8fafc;
-}
-
-.badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.badge.aluno {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.badge.professor {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.acoes {
-  display: flex;
-  gap: 6px;
-}
-
-.btn-editar {
-  background-color: #f59e0b;
-  color: white;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-
-.btn-excluir {
-  background-color: #dc2626;
-  color: white;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-
-.erro-msg {
-  color: #dc2626;
-  background-color: #fee2e2;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 12px;
-  font-size: 14px;
-}
-
-.status-msg {
-  text-align: center;
-  padding: 20px;
-  color: #666;
->>>>>>> 3bfb8415cb127757418fbbee90d0e37fa44f8d64
 }
 
 .tabela th, .tabela td {
@@ -311,5 +238,3 @@ button {
   padding: 10px;
   border-radius: 4px;
 }
-
-.status-msg
