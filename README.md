@@ -46,6 +46,27 @@ MONGODB_URI=sua_string_de_conexao
 
 A string de conexão e a senha não são disponibilizadas publicamente por questões de segurança.
 
+## Versionamento da API
+
+A API utiliza versionamento por URL para permitir
+a evolução do contrato sem prejudicar os clientes
+que utilizam versões anteriores.
+
+### API v1
+Base URL: http://localhost:3000/api/v1/peoples
+
+Retorna os dados diretamente em formato de array
+nas consultas de listagem.
+
+### API v2
+Base URL: http://localhost:3000/api/v2/peoples
+
+Retorna os dados dentro de um objeto contendo
+`data` e `meta`.
+
+A versão v1 continua disponível simultaneamente
+com a v2.
+
 ### Configuração de acesso à rede
 
 O MongoDB Atlas está configurado em Network Access com a regra `0.0.0.0/0`, permitindo conexões de diferentes endereços IP.
