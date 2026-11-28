@@ -1,50 +1,87 @@
 
-import { obterDb } from '../data/db.js'
+import prisma from '../lib/prisma.js'
 
-const COLLECTION = 'peoples'
+// Considera pessoas que não foram excluídas.
+const filtroAtivos = {
+    OR: [
+        { deletedAt: null },
+        { deletedAt: { isSet: false } }
+    ]
+}
 
-function colecao() {
-    return obterDb().collection(COLLECTION)
+function converterPessoa(pessoa) {
+    if (!pessoa) {
+        return null
+    }
+
+    const { id: mongoId, legacyId, deletedAt, ...dados } = pessoa
+
+    return {
+        ...dados,
+        id: legacyId
+    }
 }
 
 export async function findAll() {
-    return await colecao().find().toArray()
+    const pessoas = await prisma.person.findMany({
+        where: filtroAtivos,
+        orderBy: {
+            legacyId: 'asc'
+        }
+    })
+
+    return pessoas.map(converterPessoa)
 }
 
 export async function findById(id) {
-    return await colecao().findOne({ id: Number(id) })
+    const pessoa = await prisma.person.findFirst({
+        where: {
+            legacyId: Number(id),
+            ...filtroAtivos
+        }
+    })
+
+    return converterPessoa(pessoa)
 }
 
 export async function create(dados) {
-    const ultimo = await colecao().findOne(
-        {},
-        { sort: { id: -1 } }
-    )
+    const ultimo = await prisma.person.findFirst({
+        orderBy: {
+            legacyId: 'desc'
+        }
+    })
 
-    const id = ultimo ? ultimo.id + 1 : 1
+    const novoId = ultimo ? ultimo.legacyId + 1 : 1
 
-    const novaPessoa = {
-        id,
-        ...dados
-    }
+    const novaPessoa = await prisma.person.create({
+        data: {
+            legacyId: novoId,
+            ...dados
+        }
+    })
 
-    await colecao().insertOne(novaPessoa)
-
-    return novaPessoa
+    return converterPessoa(novaPessoa)
 }
 
 export async function update(id, dados) {
-    const pessoaAtualizada = {
-        id: Number(id),
-        ...dados
+    const dadosAtualizados = { ...dados }
+
+    if (
+        dados.category === 'student' &&
+        !('discipline' in dados)
+    ) {
+        dadosAtualizados.discipline = null
     }
 
-    const resultado = await colecao().replaceOne(
-        { id: Number(id) },
-        pessoaAtualizada
-    )
+    const resultado = await prisma.person.updateMany({
+        where: {
+            legacyId: Number(id),
+            ...filtroAtivos
+        },
+        data: dadosAtualizados
+    })
 
-    if (resultado.matchedCount === 0) {
+    if (resultado.count === 0) {
         return null
     }
 
@@ -52,12 +89,24 @@ export async function update(id, dados) {
 }
 
 export async function patch(id, dados) {
-    const resultado = await colecao().updateOne(
-        { id: Number(id) },
-        { $set: dados }
-    )
+    const dadosAtualizados = { ...dados }
 
-    if (resultado.matchedCount === 0) {
+    if (
+        dados.category === 'student' &&
+        !('discipline' in dados)
+    ) {
+        dadosAtualizados.discipline = null
+    }
+
+    const resultado = await prisma.person.updateMany({
+        where: {
+            legacyId: Number(id),
+            ...filtroAtivos
+        },
+        data: dadosAtualizados
+    })
+
+    if (resultado.count === 0) {
         return null
     }
 
@@ -65,9 +114,15 @@ export async function patch(id, dados) {
 }
 
 export async function remove(id) {
-    const resultado = await colecao().deleteOne({
-        id: Number(id)
+    const resultado = await prisma.person.updateMany({
+        where: {
+            legacyId: Number(id),
+            ...filtroAtivos
+        },
+        data: {
+            deletedAt: new Date()
+        }
     })
 
-    return resultado.deletedCount > 0
+    return resultado.count > 0
 }
