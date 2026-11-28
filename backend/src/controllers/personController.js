@@ -1,41 +1,49 @@
-import * as personService from '../services/personService.js'
 
-export async function listar(req, res) {
+import * as personService from '../services/personService.js'
+import { toPersonDTO } from '../dtos/person.dto.js'
+
+function criarErroNaoEncontrado(id) {
+    const erro = new Error(`Pessoa ${id} não existe`)
+    erro.status = 404
+    erro.titulo = 'Não encontrado'
+    return erro
+}
+
+export async function listar(req, res, next) {
     try {
         const pessoas = await personService.listarPessoas()
-        res.json(pessoas)
-    } catch (error) {
-        res.status(500).json({ erro: error.message })
+
+        res.status(200).json(pessoas.map(toPersonDTO))
+    } catch (erro) {
+        next(erro)
     }
 }
 
-export async function buscar(req, res) {
+export async function buscar(req, res, next) {
     try {
         const pessoa = await personService.buscarPessoa(req.params.id)
 
         if (!pessoa) {
-            return res.status(404).json({ erro: 'Cadastro não encontrado' })
+            throw criarErroNaoEncontrado(req.params.id)
         }
 
-        res.json(pessoa)
-    } catch (error) {
-        res.status(500).json({ erro: error.message })
+        res.status(200).json(toPersonDTO(pessoa))
+    } catch (erro) {
+        next(erro)
     }
 }
 
-export async function criar(req, res) {
+export async function criar(req, res, next) {
     try {
         const pessoa = await personService.cadastrarPessoa(req.body)
-        res.status(201).json(pessoa)
-    } catch (error) {
-        res.status(error.status || 500).json({
-            erro: error.message,
-            detalhes: error.detalhes
-        })
+
+        res.status(201).json(toPersonDTO(pessoa))
+    } catch (erro) {
+        next(erro)
     }
 }
 
-export async function atualizar(req, res) {
+export async function atualizar(req, res, next) {
     try {
         const pessoa = await personService.atualizarPessoa(
             req.params.id,
@@ -43,19 +51,16 @@ export async function atualizar(req, res) {
         )
 
         if (!pessoa) {
-            return res.status(404).json({ erro: 'Cadastro não encontrado' })
+            throw criarErroNaoEncontrado(req.params.id)
         }
 
-        res.json(pessoa)
-    } catch (error) {
-        res.status(error.status || 500).json({
-            erro: error.message,
-            detalhes: error.detalhes
-        })
+        res.status(200).json(toPersonDTO(pessoa))
+    } catch (erro) {
+        next(erro)
     }
 }
 
-export async function atualizarParcial(req, res) {
+export async function atualizarParcial(req, res, next) {
     try {
         const pessoa = await personService.atualizarParcialmente(
             req.params.id,
@@ -63,28 +68,27 @@ export async function atualizarParcial(req, res) {
         )
 
         if (!pessoa) {
-            return res.status(404).json({ erro: 'Cadastro não encontrado' })
+            throw criarErroNaoEncontrado(req.params.id)
         }
 
-        res.json(pessoa)
-    } catch (error) {
-        res.status(error.status || 500).json({
-            erro: error.message,
-            detalhes: error.detalhes
-        })
+        res.status(200).json(toPersonDTO(pessoa))
+    } catch (erro) {
+        next(erro)
     }
 }
 
-export async function excluir(req, res) {
+export async function excluir(req, res, next) {
     try {
-        const removido = await personService.excluirPessoa(req.params.id)
+        const excluido = await personService.excluirPessoa(req.params.id)
 
-        if (!removido) {
-            return res.status(404).json({ erro: 'Cadastro não encontrado' })
+        if (!excluido) {
+            throw criarErroNaoEncontrado(req.params.id)
         }
 
-        res.json({ mensagem: 'Cadastro excluído com sucesso' })
-    } catch (error) {
-        res.status(500).json({ erro: error.message })
+        res.status(200).json({
+            mensagem: 'Pessoa excluída com sucesso'
+        })
+    } catch (erro) {
+        next(erro)
     }
 }

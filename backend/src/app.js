@@ -1,5 +1,7 @@
 import express from 'express';
-import personRoutes from './routes/personRoutes.js'
+import personRoutes from './routes/v1/personRoutes.js'
+import personRoutesV2 from './routes/v2/personRoutes.js'
+import { errorHandler } from './middleware/errorHandler.js'
 import cors from 'cors';
 
 const app = express();
@@ -8,12 +10,15 @@ app.use(express.json());
 
 app.use(cors());
 
-app.use((req, res, next) => {
-    console.log('Método:', req.method)
-    console.log('URL:', req.url)
-    console.log('Body:', req.body)
+app.use('/api/v1/peoples', personRoutes)
+app.use('/api/v2/peoples', personRoutesV2)
 
-    next()
+app.use((req, res, next) => {
+    const erro = new Error(`Rota ${req.originalUrl} não encontrada`)
+    erro.status = 404
+    erro.titulo = 'Rota não encontrada'
+
+    next(erro)
 })
 
 app.get('/', (req, res) => {
@@ -23,6 +28,7 @@ app.get('/', (req, res) => {
     })
 })
 
-app.use('/peoples', personRoutes)
+
+app.use(errorHandler);
 
 export default app;

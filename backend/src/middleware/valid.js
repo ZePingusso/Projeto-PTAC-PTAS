@@ -1,14 +1,18 @@
+
 export function valid(schema) {
     return (req, res, next) => {
-        console.log('BODY RECEBIDO:', req.body)
-        
-        const resultado = schema.safeParse(req.body ?? {});
+        const resultado = schema.safeParse(req.body)
 
         if (!resultado.success) {
-            return res.status(400).json({
-                erro: 'Dados inválidos',
-                detalhes: resultado.error.issues.map(erro => erro.message)
-            })
+            const erro = new Error('Os dados enviados são inválidos')
+
+            erro.status = 400
+            erro.titulo = 'Dados inválidos'
+            erro.detalhe = resultado.error.issues
+                .map(item => item.message)
+                .join(', ')
+
+            return next(erro)
         }
 
         req.body = resultado.data
