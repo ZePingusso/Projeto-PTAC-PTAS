@@ -72,3 +72,98 @@ com a v2.
 O MongoDB Atlas está configurado em Network Access com a regra `0.0.0.0/0`, permitindo conexões de diferentes endereços IP.
 
 Essa configuração foi utilizada para facilitar o desenvolvimento e os testes da aplicação. Para maior segurança, recomenda-se restringir o acesso aos endereços IP autorizados.
+
+## Integração com Prisma ORM
+
+O projeto utiliza o Prisma ORM 6.19.3 para realizar a comunicação entre o backend e o MongoDB Atlas, substituindo o acesso direto pelo MongoDB Driver.
+
+O Prisma facilita as operações no banco de dados, permitindo consultar, cadastrar, atualizar e excluir registros por meio de métodos próprios.
+
+### Configuração
+
+A integração utiliza o pacote `prisma` e o `@prisma/client`.
+
+Para instalar:
+
+```bash
+npm install prisma@6.19.3 --save-dev
+npm install @prisma/client@6.19.3
+```
+
+### Schema Prisma
+
+O modelo principal da aplicação é `Person`, responsável por representar alunos e professores.
+
+O schema está localizado em `prisma/schema.prisma` e utiliza a coleção existente `peoples` no MongoDB Atlas.
+
+```prisma
+model Person {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  legacyId   Int       @unique @map("id")
+  name       String
+  email      String    @unique
+  cpf        String
+  category   String
+  discipline String?
+  deletedAt  DateTime?
+
+  @@map("peoples")
+}
+```
+
+### Configuração da conexão
+
+A conexão é realizada por meio da variável `DATABASE_URL`, definida no arquivo `.env`:
+
+```env
+DATABASE_URL="mongodb+srv://USUARIO:SENHA@SEU_CLUSTER.mongodb.net/ptas3"
+```
+
+A instância do Prisma Client é criada em `src/lib/prisma.js`:
+
+```javascript
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export default prisma
+```
+
+### Comandos utilizados
+
+Gerar o Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Validar o schema:
+
+```bash
+npx prisma validate
+```
+
+Sincronizar o modelo com o banco de dados:
+
+```bash
+npx prisma db push
+```
+
+**Observação:** por utilizar MongoDB, o projeto utiliza `prisma db push` em vez de `prisma migrate dev`.
+
+### Operações com Prisma
+
+O arquivo `src/models/personModel.js` utiliza o Prisma Client para executar as operações de banco de dados:
+
+- `findMany()`: listar pessoas.
+- `findFirst()`: buscar registros.
+- `create()`: cadastrar pessoas.
+- `updateMany()`: atualizar e realizar exclusão lógica.
+
+### Exclusão lógica
+
+O sistema utiliza o campo `deletedAt` para implementar a exclusão lógica.
+
+Quando uma pessoa é excluída, sua data de exclusão é registrada, mantendo o documento armazenado no MongoDB Atlas.
+
+Dessa forma, os registros excluídos deixam de aparecer nas consultas normais, mas não são removidos definitivamente do banco de dados.
